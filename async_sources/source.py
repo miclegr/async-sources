@@ -1,3 +1,4 @@
+from typing import List, Any
 from abc import ABC, abstractmethod
 import asyncio
 from .subscription import Subscription, SubscriptionItem
@@ -7,16 +8,20 @@ class NoUpdate(Exception):
 
 class Source(ABC):
 
-    def __init__(self, *sources: "Source", auto_start_feeding_subscriptions=True):
+    def __init__(self, *sources: "Source", feeding_subscriptions_policy:str ='on_subscribe'):
 
         assert all(isinstance(source, Source) for source in sources)
-        self._sources = sources
-        self._source_subscriptions = [s.subscribe() for s in self._sources]
-        self._subscriptions = [] 
+        self._setup_source_subscriptions(sources)
+        self._subscriptions = []
         self._setup_internal_store()
         self._loop = None
-        if auto_start_feeding_subscriptions:
+        self._feeding_subscription_policy = feeding_subscriptions_policy
+        if self._feeding_subscription_policy == 'immediate':
             self.start_feeding_subscriptions()
+
+    def _setup_source_subscriptions(self, sources):
+        self._sources = sources
+        self._source_subscriptions = [s.subscribe() for s in self._sources]
 
     def _setup_internal_store(self):
         pass
@@ -52,10 +57,12 @@ class Source(ABC):
 
             try:
                 
-                update = await self._process_update(*args)
+                updates = await self._process_update(*args)
+                assert isinstance(updates, list)
 
-                for subscription in self._subscriptions:
-                    subscription.feed(update)
+                for update in updates:
+                    for subscription in self._subscriptions:
+                        subscription.feed(update)
 
             except NoUpdate:
                 pass
@@ -80,13 +87,18 @@ class Source(ABC):
             raise AttributeError
 
     @abstractmethod
-    async def _process_update(self, *args):
+    async def _process_update(self, *args) -> List[Any]:
         pass
 
     def subscribe(self):
         subscription = Subscription(self)
         self._subscriptions.append(subscription)
+        if self._loop is None and self._feeding_subscription_policy == 'on_subscribe':
+            self.start_feeding_subscriptions()
         return subscription
+
+    def subscritions(self):
+        return self._subscriptions
 
     def start_feeding_subscriptions(self):
         if self._loop is None:
@@ -103,4 +115,3 @@ class Source(ABC):
                 pass
         else:
             raise RuntimeError
-

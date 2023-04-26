@@ -1,4 +1,6 @@
 import asyncio
+from datetime import datetime
+from typing import List
 from async_sources.source import NoUpdate, Source
 import pytest
 
@@ -13,26 +15,13 @@ def empty_source_class():
     return EmptySource
 
 @pytest.fixture
-def passthrough_source_class():
-
-    class Passthrough(Source):
-
-        async def _process_update(self, *args):
-            for arg in args:
-                update, _ = arg
-
-            return update
-
-    return Passthrough
-
-@pytest.fixture
 def one_emitter_class():
 
     class OneEmitter(Source):
 
         async def _process_update(self, *args):
             await asyncio.sleep(0.01)
-            return 1.
+            return [1.]
 
     return OneEmitter
 
@@ -49,14 +38,14 @@ def add_class():
 
             update, _ = args[0]
             self.count += update
-            return self.count
+            return [self.count]
 
     return Add
 
 @pytest.fixture
-def even_class():
+def numbers_class():
 
-    class Even(Source):
+    class Numbers(Source):
 
         def _setup_internal_store(self):
 
@@ -71,9 +60,33 @@ def even_class():
         async def _process_update(self, *args):
 
             update = next(self.store)
+            return [update]
+
+    return Numbers
+
+@pytest.fixture
+def even_class(numbers_class):
+
+    class Even(numbers_class):
+
+        async def _process_update(self, *args):
+
+            update = next(self.store)
             if update % 2 == 0:
-                return update
+                return [update]
             else:
                 raise NoUpdate
 
     return Even
+
+@pytest.fixture
+def clock_class():
+
+    class Clock(Source):
+
+        async def _process_update(self, *args) -> List[datetime]:
+
+            await asyncio.sleep(.1)
+            return [datetime.now()]
+
+    return Clock

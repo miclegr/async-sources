@@ -63,10 +63,14 @@ async def test_start_stop(empty_source_class):
     starting_n_tasks = len(asyncio.all_tasks())
     source = empty_source_class()
     n_tasks = len(asyncio.all_tasks())
+    assert n_tasks == starting_n_tasks
+
+    source.subscribe()
+    n_tasks = len(asyncio.all_tasks())
     assert n_tasks == starting_n_tasks + 1
 
     starting_n_tasks = len(asyncio.all_tasks())
-    source = empty_source_class(auto_start_feeding_subscriptions=False)
+    source = empty_source_class(feeding_subscriptions_policy='never')
     n_tasks = len(asyncio.all_tasks())
     assert n_tasks == starting_n_tasks
     
