@@ -21,6 +21,11 @@ class Interval:
     def __len__(self):
         return len(self.store)
 
+    def __repr__(self) -> str:
+        start = self.start_date.strftime("%Y%m%d %H:%M:%S")
+        end = self.end_date.strftime("%Y%m%d %H:%M:%S")
+        return f'Interval[{start},{end}]'
+
 class IntervalSource(Source,ABC):
 
     def _setup_internal_store(self):
@@ -54,13 +59,16 @@ class IntervalSource(Source,ABC):
         self._active_intervals.extend(new_intervals)
 
         updates = []
+        to_remove = []
 
         for interval in self._active_intervals:
             if self._add_in_interval(interval, key):
                 interval.add(data)
             if self._is_interval_ready(interval):
-                self._active_intervals.remove(interval)
+                to_remove.append(interval)
                 updates.append(self._finalize_interval(interval))
+
+        self._active_intervals = [x for x in self._active_intervals if x not in to_remove]
 
         if len(updates)>0:
             return updates
