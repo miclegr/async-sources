@@ -12,7 +12,7 @@ def interval_class():
 
         @staticmethod
         def _key_by_time(data):
-            return data, 1
+            return data
 
         @staticmethod
         def _is_interval_ready(interval):
@@ -37,19 +37,18 @@ async def test_overall(interval_class, clock_class):
     subscription = source.subscribe()
     item = await subscription.get()
 
-    assert item.data.store == [1, 1, 1]
+    assert len(item.data.store) == 3
 
 @pytest.mark.asyncio
 async def test_finalize(interval_class, clock_class):
 
     class TestFinalize(interval_class):
 
-        @staticmethod
-        def _finalize_interval(interval):
-            return {interval.attributes['payload']:interval.store}
+        def _finalize_interval(self, interval):
+            return {interval.attributes['payload']:len(interval.store)}
 
     source = TestFinalize(clock_class())
     subscription = source.subscribe()
     item = await subscription.get()
 
-    assert item.data == {'hello':[1, 1, 1]}
+    assert item.data == {'hello':3}

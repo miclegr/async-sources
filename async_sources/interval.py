@@ -27,7 +27,7 @@ class IntervalSource(Source,ABC):
         self._active_intervals = []
 
     @abstractstaticmethod
-    def _key_by_time(data) -> Tuple[datetime, Any]:
+    def _key_by_time(data) -> datetime:
         pass
 
     @abstractmethod
@@ -42,15 +42,14 @@ class IntervalSource(Source,ABC):
     def _is_interval_ready(interval: Interval) -> bool:
         pass
 
-    @staticmethod
-    def _finalize_interval(interval: Interval) -> Any:
+    def _finalize_interval(self, interval: Interval) -> Any:
         return interval
 
     async def _process_update(self, *args):
         assert len(args) == 1
         data, _ = args[0]
 
-        key, value = self._key_by_time(data)
+        key = self._key_by_time(data)
         new_intervals = self._update_active_intervals(self._active_intervals, key)
         self._active_intervals.extend(new_intervals)
 
@@ -58,7 +57,7 @@ class IntervalSource(Source,ABC):
 
         for interval in self._active_intervals:
             if self._add_in_interval(interval, key):
-                interval.add(value)
+                interval.add(data)
             if self._is_interval_ready(interval):
                 self._active_intervals.remove(interval)
                 updates.append(self._finalize_interval(interval))
