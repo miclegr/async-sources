@@ -102,16 +102,22 @@ class Source(ABC):
 
     def start_feeding_subscriptions(self):
         if self._loop is None:
-            self._loop = asyncio.create_task(self._task())
+            self._loop = id(asyncio.create_task(self._task()))
         else:
             raise RuntimeError
 
     async def stop_feeding_subscriptions(self):
         if self._loop is not None:
-            self._loop.cancel()
-            try:
-                await self._loop
-            except asyncio.CancelledError:
-                pass
+            tasks = [x for x in asyncio.all_tasks() if id(x) == self._loop]
+            if len(tasks)==1:
+                task = tasks[0]
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+                self._loop = None
+            else:
+                raise RuntimeError
         else:
             raise RuntimeError
