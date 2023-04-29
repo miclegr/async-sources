@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from typing import List
+from typing import List, Any
 from async_sources.source import NoUpdate, Source
 import pytest
 
@@ -90,3 +90,23 @@ def clock_class():
             return [datetime.now()]
 
     return Clock
+
+
+@pytest.fixture
+def emit_single_element_class():
+
+    class EmitSingleElement(Source):
+
+        def __init__(self, what):
+            self.what = what
+            self.init = True
+            super().__init__()
+
+        async def _process_update(self, *args) -> List[Any]:
+
+            if self.init:
+                return [self.what]
+            else:
+                raise NoUpdate
+
+    return EmitSingleElement
