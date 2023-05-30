@@ -20,3 +20,6 @@ class Subscription(object):
     async def get(self) -> SubscriptionItem:
         data = await self._queue.get()
         return SubscriptionItem(self.id, data)
+
+    def queue_size(self) -> int:
+        return self._queue.qsize()

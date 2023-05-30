@@ -11,6 +11,9 @@ async def test_subscription(empty_source_class):
     payload = 'hello world'
 
     subscription.feed(payload)
+
+    assert subscription.queue_size() == 1
+
     received = await subscription.get()
 
     expected = SubscriptionItem(subscription.id, payload)
