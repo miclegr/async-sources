@@ -2,7 +2,7 @@ from .source import Source, NoUpdate
 from asyncio import Queue
 from typing import List
 
-class InnerProducer(Source):
+class InnerProducerSource(Source):
 
     def __init__(self, source: "Source", buffer: Queue):
 
@@ -15,7 +15,7 @@ class InnerProducer(Source):
         await self.buffer.put(data)
         raise NoUpdate
 
-class InnerConsumer(Source):
+class InnerConsumerSource(Source):
 
     def __init__(self, buffer:Queue, feeding_subscriptions_policy: str = 'on_subscribe'):
 
@@ -33,9 +33,9 @@ def producers_and_consumer():
     buffer = Queue()
 
     def producer_factory(source :Source):
-        return InnerProducer(source, buffer=buffer)
+        return InnerProducerSource(source, buffer=buffer)
 
-    consumer = InnerConsumer(buffer)
+    consumer = InnerConsumerSource(buffer)
 
     return producer_factory, consumer
 

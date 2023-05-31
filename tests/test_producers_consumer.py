@@ -1,5 +1,5 @@
 from .fixtures import *
-from async_sources.producers_consumer import InnerConsumer, InnerProducer, producers_and_consumer
+from async_sources.producers_consumer import InnerConsumerSource, InnerProducerSource, producers_and_consumer
 from asyncio import Queue, sleep
 import pytest
 
@@ -10,7 +10,7 @@ async def test_producer(emit_elements_class):
     emitter = emit_elements_class(data)
 
     buffer = Queue()
-    producer = InnerProducer(emitter, buffer=buffer)
+    producer = InnerProducerSource(emitter, buffer=buffer)
     
     for d in data:
         d_buffer = await buffer.get()
@@ -24,7 +24,7 @@ async def test_consumer(emit_elements_class):
     for d in data:
         await buffer.put(d)
 
-    consumer = InnerConsumer(buffer)
+    consumer = InnerConsumerSource(buffer)
     subscription = consumer.subscribe()
 
     for d in data:
