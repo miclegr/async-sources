@@ -110,3 +110,21 @@ def emit_single_element_class():
                 raise NoUpdate
 
     return EmitSingleElement
+
+@pytest.fixture
+def emit_elements_class():
+
+    class EmitElements(Source):
+
+        def __init__(self, what):
+            self.what = what[::-1]
+            super().__init__()
+
+        async def _process_update(self, *args) -> List[Any]:
+
+            if len(self.what):
+                return [self.what.pop()]
+            else:
+                raise NoUpdate
+
+    return EmitElements
