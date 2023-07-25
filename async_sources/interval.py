@@ -64,9 +64,9 @@ class IntervalSource(Source,ABC):
         for interval in self._active_intervals:
             if self._add_in_interval(interval, key):
                 interval.add(data)
-            if self._is_interval_ready(interval):
-                to_remove.append(interval)
-                updates.append(self._finalize_interval(interval))
+                if self._is_interval_ready(interval):
+                    to_remove.append(interval)
+                    updates.append(self._finalize_interval(interval))
 
         self._active_intervals = [x for x in self._active_intervals if x not in to_remove]
 
