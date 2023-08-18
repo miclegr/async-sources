@@ -4,6 +4,7 @@ from .source import Source
 
 class StopLoop(Source, ABC):
 
+    initial_delay_sec: int
     trigger: int
     grace_time_sec: int
 
@@ -13,11 +14,17 @@ class StopLoop(Source, ABC):
 
     def __init__(self, source: Source):
         self.counter = 0
+        self.initial = True
         super().__init__(source, feeding_subscriptions_policy='immediate')
 
     async def _process_update(self, *args):
         assert len(args) == 1
         data, _ = args[0]
+
+        if self.initial:
+            if self.initial_delay_sec > 0:
+                await asyncio.sleep(self.initial_delay_sec)
+            self.initial = False
 
         if self._check_value(data):
             self.counter+=1
