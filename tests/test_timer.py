@@ -6,8 +6,9 @@ import pytest
 @pytest.mark.asyncio
 async def test_timer():
 
+    initial_delay_seconds = 0.1
     period = 0.5
-    source = TimerSource(period)
+    source = TimerSource(initial_delay_seconds, period, feeding_subscriptions_policy='immediate')
     subscription = source.subscribe()
 
     await subscription.get()
