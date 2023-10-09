@@ -19,22 +19,21 @@ class MatchAndCall(Source, ABC):
 
     async def _process_update(self, *args) -> List[Any]:
 
+        ready_to_call = []
         for arg in args:
+
             value, index = arg
             key = self._key_arg(value, index)
             assert self._not_ready[key][index] is None
             self._not_ready[key][index] = value
 
-        ready_to_call = []
-        for k,v in self._not_ready.items():
-            if not any(x is None for x in v):
-                ready_to_call.append(k)
+            if all(x is not None for x in self._not_ready[key]):
+                args = self._not_ready[key]
+                del self._not_ready[key]
+                ready_to_call.append((key, args))
 
         output = []
-        for k in ready_to_call:
-            args = self._not_ready[k]
-            del self._not_ready[k]
-
+        for k, args in ready_to_call:
             output.append(await self._call(k, *args))
 
         return output
