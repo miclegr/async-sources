@@ -43,6 +43,8 @@ async def test_match(emit_elements_class):
 
     class TestMatchAndCall(MatchAndCall):
 
+        duplicate_mode = 'warn'
+
         def _key_arg(self, value, index: int):
             return 0 if value % 2 == 0 else 1
 

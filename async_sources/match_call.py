@@ -2,8 +2,11 @@ from abc import ABC, abstractmethod
 from typing import Any, List
 from .source import Source, NoUpdate
 from collections import defaultdict
+from warnings import warn
 
 class MatchAndCall(Source, ABC):
+
+    duplicate_mode = 'raise'
 
     def _setup_internal_store(self):
         n_sources = len(self._sources)
@@ -24,7 +27,12 @@ class MatchAndCall(Source, ABC):
 
             value, index = arg
             key = self._key_arg(value, index)
-            assert self._not_ready[key][index] is None
+            check = self._not_ready[key][index] is None
+            if not check and self.duplicate_mode == 'raise':
+                raise AttributeError(f'{key} at index {index} has duplicates')
+            elif not check and self.duplicate_mode == 'warn':
+                warn(f'{key} at index {index} has duplicates')
+
             self._not_ready[key][index] = value
 
             if all(x is not None for x in self._not_ready[key]):
