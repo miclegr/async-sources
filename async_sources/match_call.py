@@ -32,6 +32,7 @@ class MatchAndCall(Source, ABC):
                 raise AttributeError(f'{key} at index {index} has duplicates')
             elif not check and self.duplicate_mode == 'warn':
                 warn(f'{key} at index {index} has duplicates')
+                continue
 
             self._not_ready[key][index] = value
 
