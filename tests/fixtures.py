@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Any
 from async_sources.source import NoUpdate, Source
 import pytest
+import pytest_asyncio
 
 @pytest.fixture
 def empty_source_class():
@@ -97,14 +98,16 @@ def emit_single_element_class():
 
     class EmitSingleElement(Source):
 
-        def __init__(self, what):
+        def __init__(self, what, feeding_subscriptions_policy = 'on_subscribe'):
             self.what = what
             self.init = True
-            super().__init__()
+            super().__init__(feeding_subscriptions_policy=feeding_subscriptions_policy)
 
         async def _process_update(self, *args) -> List[Any]:
 
             if self.init:
+                self.init = False
+                print('emitted')
                 return [self.what]
             else:
                 raise NoUpdate
