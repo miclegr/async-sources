@@ -107,7 +107,6 @@ def emit_single_element_class():
 
             if self.init:
                 self.init = False
-                print('emitted')
                 return [self.what]
             else:
                 raise NoUpdate
@@ -119,9 +118,9 @@ def emit_elements_class():
 
     class EmitElements(Source):
 
-        def __init__(self, what):
+        def __init__(self, what, feeding_subscriptions_policy='immediate'):
             self.what = what[::-1]
-            super().__init__()
+            super().__init__(feeding_subscriptions_policy=feeding_subscriptions_policy)
 
         async def _process_update(self, *args) -> List[Any]:
 

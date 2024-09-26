@@ -5,49 +5,50 @@ from .fixtures import *
 
 
 @pytest.mark.asyncio
-async def test_timeout(emit_single_element_class):
-
-    value = 1
-    timeout_value = 0
+async def test_timeout(emit_elements_class):
 
 
     class Passthrough(Source):
 
-        def __init__(self, upstream, sleep_for):
-            self.sleep_for = sleep_for
+        def __init__(self, upstream):
             super().__init__(upstream)
+
 
         async def _process_update(self, *args):
             val, _ = args[0]
-            await sleep(self.sleep_for)
+            sleep_for = 0 if val % 2 == 0 else 1.
+            await sleep(sleep_for)
             return [val]
 
     class MyTimeoutSource(TimeoutSource):
 
         @staticmethod
-        def _response_if_timeout(last_trigger):
+        def _key_from_trigger(trigger) -> Any:
+            return trigger
+
+        @staticmethod
+        def _key_from_response(response) -> Any:
+            return response
+
+        @staticmethod
+        def _response_if_timeout(key):
             return timeout_value
 
-    timeout_seconds = 1.
-    no_sleep = 0
-    emitter = emit_single_element_class(value, feeding_subscriptions_policy = 'on_demand')
-    passthrough = Passthrough(emitter, sleep_for=no_sleep)
+    elements = [0,2,1]
+    timeout_value = -1
+    timeout_seconds = 0.5
+    emitter = emit_elements_class(what=elements, feeding_subscriptions_policy = 'on_demand')
+    passthrough = Passthrough(emitter)
     timeout = MyTimeoutSource(emitter, passthrough, timeout_seconds=timeout_seconds)
     subscription = timeout.subscribe()
     emitter.start_feeding_subscriptions()
 
     data = (await subscription.get()).data
-    assert data == value
+    assert data == elements[0]
 
-    timeout_seconds = .5
-    sleep_for = 1.
-    emitter = emit_single_element_class(value, feeding_subscriptions_policy = 'on_demand')
-    passthrough = Passthrough(emitter, sleep_for=sleep_for)
-    timeout = MyTimeoutSource(emitter, passthrough, timeout_seconds=timeout_seconds)
-    subscription = timeout.subscribe()
-    emitter.start_feeding_subscriptions()
+    data = (await subscription.get()).data
+    assert data == elements[1]
 
     data = (await subscription.get()).data
     assert data == timeout_value
-
 
