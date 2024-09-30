@@ -53,7 +53,7 @@ async def test_map_fork(numbers_class, add_class):
     class MapAdd(MapCollection):
 
         @staticmethod
-        def _mapping_fn(source):
+        def _mapping_fn(source, key):
             return add_class(source)
 
     forked = PairOddFork(numbers_class())

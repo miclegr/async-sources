@@ -39,3 +39,8 @@ def producers_and_consumer():
 
     return producer_factory, consumer
 
+def consumer_only():
+    buffer = Queue()
+    consumer = InnerConsumerSource(buffer)
+
+    return buffer, consumer

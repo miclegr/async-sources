@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod, abstractstaticmethod
 class MapCollection(CollectionSource, ABC):
 
     @abstractstaticmethod
-    def _mapping_fn(source: Source) -> Source:
+    def _mapping_fn(source: Source, key: Any) -> Source:
         pass
 
     def _get_keys_from_update(self, key: Any) -> List[Any]:
@@ -23,6 +23,6 @@ class MapCollection(CollectionSource, ABC):
 
     def _create_new_inner_source(self, key) -> Source:
         parent_collection = self._sources[0]
-        return self._mapping_fn(parent_collection.get_inner_source(key))
+        return self._mapping_fn(parent_collection.get_inner_source(key), key)
 
 
