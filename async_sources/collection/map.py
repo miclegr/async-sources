@@ -25,4 +25,3 @@ class MapCollection(CollectionSource, ABC):
         parent_collection = self._sources[0]
         return self._mapping_fn(parent_collection.get_inner_source(key), key)
 
-

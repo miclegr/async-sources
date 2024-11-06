@@ -1,10 +1,10 @@
 from typing import Dict, List, Any, Tuple
 from abc import ABC, abstractmethod, abstractstaticmethod
-from ..source import NoUpdate, Source
+from ..source import NoUpdate, Source, BatchedSource
 from ..subscription import Subscription
 
 
-class CollectionSource(Source, ABC):
+class CollectionSource(BatchedSource, ABC):
 
     def __init__(self, *sources) -> None:
         super().__init__(*sources)
@@ -32,20 +32,22 @@ class CollectionSource(Source, ABC):
     async def _process_update(self, *args) -> List[Any]:
 
         assert len(args) == 1
-        data, _ = args[0]
-
-        keys = self._get_keys_from_update(data)
+        items, _ = args[0]
 
         new_keys = []
-        for key in keys:
-            if self._check_if_new_key(key):
-                new_keys.append(key)
+        for item in items:
 
-        for key in keys:
-            source = self.get_inner_source(key)
-            if key in new_keys:
-                self._handle_new_key(source, key)
-            self._process_data(source, key, data)
+            keys = self._get_keys_from_update(item)
+
+            for key in keys:
+                if self._check_if_new_key(key):
+                    new_keys.append(key)
+
+            for key in keys:
+                source = self.get_inner_source(key)
+                if key in new_keys:
+                    self._handle_new_key(source, key)
+                self._process_data(source, key, item)
         
         return new_keys
 
