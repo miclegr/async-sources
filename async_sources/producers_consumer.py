@@ -1,18 +1,20 @@
-from .source import Source, NoUpdate
-from asyncio import Queue
+from .source import Source, NoUpdate, BatchedSource
+from .queue import Queue
 from typing import List
 
-class InnerProducerSource(Source):
+class InnerProducerSource(BatchedSource):
 
-    def __init__(self, source: "Source", buffer: Queue):
+    def __init__(self, source: Source, buffer: Queue):
 
         self.buffer = buffer
         super().__init__(source, feeding_subscriptions_policy='immediate')
 
     async def _process_update(self, *args) -> List:
 
-        data, _ = args[0]
-        await self.buffer.put(data)
+        items, _ = args[0]
+        for item in items:
+            self.buffer.put_nowait(item)
+
         raise NoUpdate
 
 class InnerConsumerSource(Source):
@@ -24,8 +26,8 @@ class InnerConsumerSource(Source):
 
     async def _process_update(self, *args) -> List:
 
-        data = await self.buffer.get()
-        return [data]
+        data = await self.buffer.get_all()
+        return data
 
 
 def producers_and_consumer():
