@@ -1,4 +1,4 @@
-from asyncio import Queue
+from .queue import Queue
 from typing import Any
 
 class SubscriptionItem(object):
@@ -19,6 +19,10 @@ class Subscription(object):
 
     async def get(self) -> SubscriptionItem:
         data = await self._queue.get()
+        return SubscriptionItem(self.id, data)
+
+    async def get_all(self) -> SubscriptionItem:
+        data = await self._queue.get_all()
         return SubscriptionItem(self.id, data)
 
     def queue_size(self) -> int:

@@ -1,4 +1,5 @@
-from async_sources.source import Source
+from asyncio import sleep
+from async_sources.source import BatchedSource, Source
 from async_sources.subscription import Subscription, SubscriptionItem
 from .fixtures import *
 
@@ -81,3 +82,20 @@ async def test_start_stop(empty_source_class):
     await source.stop_feeding_subscriptions()
     n_tasks = len(asyncio.all_tasks())
     assert n_tasks == starting_n_tasks
+
+@pytest.mark.asyncio
+async def test_batched_source(emit_elements_class):
+
+    class TestBatchedSource(BatchedSource):
+        async def _process_update(self, *args) -> List[Any]:
+            [(data,_)] = args
+            return [data]
+
+    data = [1,2,3,4,5]
+
+    emitter = emit_elements_class(data)
+    batched_data = TestBatchedSource(emitter)
+
+    await sleep(.1)
+    emitted_data = (await batched_data.subscribe().get()).data
+    assert data == emitted_data

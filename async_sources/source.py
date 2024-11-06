@@ -16,6 +16,7 @@ class Source(ABC):
         self._setup_internal_store()
         self._loop = None
         self._feeding_subscription_policy = feeding_subscriptions_policy
+        self._subscription_getter_fn = Subscription.get
         if self._feeding_subscription_policy == 'immediate':
             self.start_feeding_subscriptions()
 
@@ -29,7 +30,9 @@ class Source(ABC):
     async def _task(self):
 
         running = []
-        news = [asyncio.create_task(s.get()) for s in self._source_subscriptions]
+        news = [asyncio.create_task(
+            self._subscription_getter_fn(s)
+        ) for s in self._source_subscriptions]
 
         while True:
             
@@ -45,7 +48,9 @@ class Source(ABC):
 
                     subscription_item = future.result()
                     source_idx = self._get_source_idx_from_subscription_id(subscription_item.subscription_id)
-                    new = asyncio.create_task(self._source_subscriptions[source_idx].get())
+                    new = asyncio.create_task(
+                        self._subscription_getter_fn(self._source_subscriptions[source_idx])
+                    )
 
                     args.append((subscription_item.data, source_idx))
                     news.append(new)
@@ -121,3 +126,10 @@ class Source(ABC):
                 raise RuntimeError
         else:
             raise RuntimeError
+
+class BatchedSource(Source):
+
+    def __init__(self, *sources: "Source", feeding_subscriptions_policy: str = 'on_subscribe'):
+        super().__init__(*sources, feeding_subscriptions_policy=feeding_subscriptions_policy)
+        self._subscription_getter_fn = Subscription.get_all
+
