@@ -42,11 +42,11 @@ class CollectionSource(BatchedSource, ABC):
             for key in keys:
                 if self._check_if_new_key(key):
                     new_keys.append(key)
-
-            for key in keys:
-                source = self.get_inner_source(key)
-                if key in new_keys:
+                    source = self.get_inner_source(key)
                     self._handle_new_key(source, key)
+                else:
+                    source = self.get_inner_source(key)
+
                 self._process_data(source, key, item)
         
         return new_keys
